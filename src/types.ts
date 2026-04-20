@@ -1,7 +1,3 @@
-/// <reference types="vite/client" />
-
-export {} // Make this file a module so `declare global` takes effect
-
 export interface ClusterConfig {
   name: string
   feHost: string
@@ -58,8 +54,7 @@ export interface IElectronAPI {
   on: (channel: string, callback: (data: unknown) => void) => () => void
 }
 
-declare global {
-  interface Window {
-    electronAPI: IElectronAPI
-  }
-}
+export type TestType = 'ssb' | 'tpch' | 'tpcds'
+export type TestStep = 1 | 2 | 3 | 4 | 5
+export type TestStatus = 'idle' | 'running' | 'success' | 'error'
+export type LogLevel = 'info' | 'error'

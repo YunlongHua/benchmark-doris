@@ -8,6 +8,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
     "antd": "^5.0.0",
     "echarts": "^5.0.0",
     "js-yaml": "^4.1.0",

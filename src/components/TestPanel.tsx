@@ -6,7 +6,7 @@ import { TestStep } from '../types'
 const SCALE_OPTIONS = [1, 10, 100, 500, 1000]
 
 export default function TestPanel() {
-  const { testType, scale, status, setScale, startTest, stopTest, runStep } = useTestStore()
+  const { scale, status, setScale, startTest, stopTest, runStep } = useTestStore()
 
   const steps: { step: TestStep; label: string }[] = [
     { step: 1, label: 'Build' },
@@ -16,7 +16,7 @@ export default function TestPanel() {
     { step: 5, label: 'Run Queries' }
   ]
 
-  const statusMap = { idle: 'default', running: 'active', success: 'success', error: 'exception' }
+  const statusMap = { idle: 'normal', running: 'active', success: 'success', error: 'exception' } as const
 
   return (
     <Card title="Test Control">
