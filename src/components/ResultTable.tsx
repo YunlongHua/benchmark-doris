@@ -1,4 +1,4 @@
-import { Table, Card, Button } from 'antd'
+import { Table, Card, Button, message } from 'antd'
 import { useTestStore } from '../stores/testStore'
 
 export default function ResultTable() {
@@ -31,7 +31,16 @@ export default function ResultTable() {
   ]
 
   return (
-    <Card title="Query Results" extra={<Button>Export JSON</Button>}>
+    <Card title="Query Results" extra={<Button onClick={async () => {
+  const { result } = useTestStore.getState()
+  if (!result) return
+  try {
+    await window.electronAPI.result.export(result, `${result.testType}_${result.scale}_${Date.now()}.json`)
+    message.success('Exported successfully')
+  } catch (e) {
+    message.error('Export failed')
+  }
+}}>Export JSON</Button>}>
       <Table
         dataSource={result.queries}
         columns={columns}
