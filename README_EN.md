@@ -1,10 +1,11 @@
 # Doris Benchmark
 
+[中文文档](README.md) | English
+
 A desktop application for running database benchmarks (SSB, TPCH, TPCDS) against [Apache Doris](https://doris.apache.org) clusters and generating HTML performance reports.
 
 Built with Electron + React + TypeScript + Ant Design.
 
-[中文文档](README.md)
 
 ## Features
 

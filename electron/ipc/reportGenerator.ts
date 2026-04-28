@@ -224,15 +224,18 @@ export class ReportGenerator {
     <div class="info-item"><span class="lbl" data-i18n="hotRange">${isZh ? '热缓存范围' : 'Hot Range'}</span><span class="val">${summary.minHotRun} — ${summary.maxHotRun} ms</span></div>
   </div>
 
-  <!-- Charts -->
-  <div class="sec-title"><div class="line"></div><span data-i18n="charts">${isZh ? '性能图表' : 'Performance Charts'}</span></div>
-  <div class="charts">
-    <div class="chart-box"><canvas id="barChart"></canvas></div>
-    <div class="chart-box"><canvas id="lineChart"></canvas></div>
-    <div class="chart-box"><canvas id="volatilityChart"></canvas></div>
-  </div>
+  	  <!-- Charts -->
+	  <div class="sec-title"><div class="line"></div><span data-i18n="charts">${isZh ? '性能图表' : 'Performance Charts'}</span></div>
+	  <div class="chart-tab-bar" id="chartTabBar">
+	    <button class="chart-tab-btn active" data-chart="bar" data-i18n="chartBar">${isZh ? '柱状图' : 'Bar'}</button>
+	    <button class="chart-tab-btn" data-chart="line" data-i18n="chartLine">${isZh ? '折线图' : 'Line'}</button>
+	    <button class="chart-tab-btn" data-chart="volatility" data-i18n="chartVol">${isZh ? '波动图' : 'Volatility'}</button>
+	  </div>
+	  <div class="chart-panel active" id="chart-bar"><div class="chart-box"><canvas id="barChart"></canvas></div></div>
+	  <div class="chart-panel" id="chart-line"><div class="chart-box"><canvas id="lineChart"></canvas></div></div>
+	  <div class="chart-panel" id="chart-volatility"><div class="chart-box"><canvas id="volatilityChart"></canvas></div></div>
 
-  <!-- Query Details -->
+<!-- Query Details -->
   <div class="sec-title"><div class="line"></div><span data-i18n="details">${isZh ? '查询明细' : 'Query Details'}</span></div>
   <div class="table-wrap">
     <div class="table-scroll">
@@ -263,11 +266,11 @@ export class ReportGenerator {
   <div class="tab-panel" id="tab-flat">
 
   <!-- Flat Key Metrics -->
-  <div class="sec-title"><div class="line" style="background: var(--accent2);"></div><span>${isZh ? 'Flat 表关键指标' : 'Flat Table Key Metrics'}</span></div>
+  <div class="sec-title"><div class="line" style="background: var(--accent2);"></div><span data-i18n="flatMetrics">${isZh ? 'Flat 表关键指标' : 'Flat Table Key Metrics'}</span></div>
   <div class="stats">
     <div class="stat">
       <div class="stat-val accent">${flatSummary.successCount}<span class="unit">/${flatSummary.totalQueries}</span></div>
-      <div class="stat-lbl">${isZh ? '成功 / 总数' : 'OK / Total'}</div>
+      <div class="stat-lbl" data-i18n="queries">${isZh ? '成功 / 总数' : 'OK / Total'}</div>
     </div>
     <div class="stat">
       <div class="stat-val ok">${flatSummary.successRate.toFixed(1)}<span class="unit">%</span></div>
@@ -292,43 +295,46 @@ export class ReportGenerator {
   </div>
 
   <!-- Flat Test Info -->
-  <div class="sec-title"><div class="line" style="background: var(--accent2);"></div><span>${isZh ? 'Flat 表测试信息' : 'Flat Table Test Info'}</span></div>
+  <div class="sec-title"><div class="line" style="background: var(--accent2);"></div><span data-i18n="flatInfo">${isZh ? 'Flat 表测试信息' : 'Flat Table Test Info'}</span></div>
   <div class="info-grid">
-    <div class="info-item"><span class="lbl">${isZh ? '测试类型' : 'Test Type'}</span><span class="val">${typeLabel}</span></div>
-    <div class="info-item"><span class="lbl">${isZh ? '规模因子' : 'Scale Factor'}</span><span class="val">SF ${scale}</span></div>
-    <div class="info-item"><span class="lbl">${isZh ? '冷启动总耗时' : 'Total Cold Time'}</span><span class="val">${fmt(flatTotalColdRunMs)}</span></div>
-    <div class="info-item"><span class="lbl">${isZh ? '热缓存总耗时' : 'Total Hot Time'}</span><span class="val">${fmt(flatTotalHotRunMs)}</span></div>
-    <div class="info-item"><span class="lbl">${isZh ? '冷启动标准差' : 'Cold StdDev'}</span><span class="val">${flatSummary.coldStdDev} ms</span></div>
-    <div class="info-item"><span class="lbl">${isZh ? '热缓存标准差' : 'Hot StdDev'}</span><span class="val">${flatSummary.hotStdDev} ms</span></div>
-    <div class="info-item"><span class="lbl">${isZh ? '冷启动范围' : 'Cold Range'}</span><span class="val">${flatColdRange}</span></div>
-    <div class="info-item"><span class="lbl">${isZh ? '热缓存范围' : 'Hot Range'}</span><span class="val">${flatHotRange}</span></div>
+    <div class="info-item"><span class="lbl" data-i18n="testType">${isZh ? '测试类型' : 'Test Type'}</span><span class="val">${typeLabel}</span></div>
+    <div class="info-item"><span class="lbl" data-i18n="scale">${isZh ? '规模因子' : 'Scale Factor'}</span><span class="val">SF ${scale}</span></div>
+    <div class="info-item"><span class="lbl" data-i18n="totalCold">${isZh ? '冷启动总耗时' : 'Total Cold Time'}</span><span class="val">${fmt(flatTotalColdRunMs)}</span></div>
+    <div class="info-item"><span class="lbl" data-i18n="totalHot">${isZh ? '热缓存总耗时' : 'Total Hot Time'}</span><span class="val">${fmt(flatTotalHotRunMs)}</span></div>
+    <div class="info-item"><span class="lbl" data-i18n="coldStd">${isZh ? '冷启动标准差' : 'Cold StdDev'}</span><span class="val">${flatSummary.coldStdDev} ms</span></div>
+    <div class="info-item"><span class="lbl" data-i18n="hotStd">${isZh ? '热缓存标准差' : 'Hot StdDev'}</span><span class="val">${flatSummary.hotStdDev} ms</span></div>
+    <div class="info-item"><span class="lbl" data-i18n="coldRange">${isZh ? '冷启动范围' : 'Cold Range'}</span><span class="val">${flatColdRange}</span></div>
+    <div class="info-item"><span class="lbl" data-i18n="hotRange">${isZh ? '热缓存范围' : 'Hot Range'}</span><span class="val">${flatHotRange}</span></div>
   </div>
 
-  <!-- Flat Charts -->
-  <div class="sec-title"><div class="line" style="background: var(--accent2);"></div><span>${isZh ? 'Flat 表性能图表' : 'Flat Table Charts'}</span></div>
-  <div class="charts">
-    <div class="chart-box"><canvas id="flatBarChart"></canvas></div>
-    <div class="chart-box"><canvas id="flatLineChart"></canvas></div>
-    <div class="chart-box"><canvas id="flatVolatilityChart"></canvas></div>
-  </div>
+  	  <!-- Flat Charts -->
+	  <div class="sec-title"><div class="line" style="background: var(--accent2);"></div><span data-i18n="flatCharts">${isZh ? 'Flat 表性能图表' : 'Flat Table Charts'}</span></div>
+	  <div class="chart-tab-bar" id="flatChartTabBar">
+	    <button class="chart-tab-btn active" data-fchart="bar" data-i18n="chartBar">${isZh ? '柱状图' : 'Bar'}</button>
+	    <button class="chart-tab-btn" data-fchart="line" data-i18n="chartLine">${isZh ? '折线图' : 'Line'}</button>
+	    <button class="chart-tab-btn" data-fchart="volatility" data-i18n="chartVol">${isZh ? '波动图' : 'Volatility'}</button>
+	  </div>
+	  <div class="chart-panel active" id="fchart-bar"><div class="chart-box"><canvas id="flatBarChart"></canvas></div></div>
+	  <div class="chart-panel" id="fchart-line"><div class="chart-box"><canvas id="flatLineChart"></canvas></div></div>
+	  <div class="chart-panel" id="fchart-volatility"><div class="chart-box"><canvas id="flatVolatilityChart"></canvas></div></div>
 
-  <!-- Flat Query Details -->
-  <div class="sec-title"><div class="line" style="background: var(--accent2);"></div><span>${isZh ? 'Flat 表查询明细' : 'Flat Table Details'}</span></div>
+<!-- Flat Query Details -->
+  <div class="sec-title"><div class="line" style="background: var(--accent2);"></div><span data-i18n="flatDetails">${isZh ? 'Flat 表查询明细' : 'Flat Table Details'}</span></div>
   <div class="table-wrap">
     <div class="table-scroll">
       <table>
         <thead>
           <tr>
             <th class="col-idx">#</th>
-            <th>${isZh ? '查询' : 'Query'}</th>
-            <th class="col-num">${isZh ? '冷启动' : 'Cold'}</th>
-            <th class="col-num">${isZh ? '热启动1' : 'Hot 1'}</th>
-            <th class="col-num">${isZh ? '热启动2' : 'Hot 2'}</th>
-            <th class="col-num">${isZh ? '最优热启动' : 'Best Hot'}</th>
-            <th class="col-num">${isZh ? '平均' : 'Avg'}</th>
-            <th class="col-num">${isZh ? '偏差' : 'StdDev'}</th>
-            <th class="col-num">${isZh ? '加速比' : 'Speedup'}</th>
-            <th>${isZh ? '状态' : 'Status'}</th>
+            <th data-i18n="colQuery">${isZh ? '查询' : 'Query'}</th>
+            <th class="col-num" data-i18n="colCold">${isZh ? '冷启动' : 'Cold'}</th>
+            <th class="col-num" data-i18n="colHot1">${isZh ? '热启动1' : 'Hot 1'}</th>
+            <th class="col-num" data-i18n="colHot2">${isZh ? '热启动2' : 'Hot 2'}</th>
+            <th class="col-num" data-i18n="colBest">${isZh ? '最优热启动' : 'Best Hot'}</th>
+            <th class="col-num" data-i18n="colAvg">${isZh ? '平均' : 'Avg'}</th>
+            <th class="col-num" data-i18n="colStd">${isZh ? '偏差' : 'StdDev'}</th>
+            <th class="col-num" data-i18n="colSpeedup">${isZh ? '加速比' : 'Speedup'}</th>
+            <th data-i18n="colStatus">${isZh ? '状态' : 'Status'}</th>
           </tr>
         </thead>
         <tbody>${flatTableRows}</tbody>
@@ -638,13 +644,28 @@ export class ReportGenerator {
   .info-item .val { font-family: var(--mono); font-weight: 600; font-size: 13px; color: var(--text); }
 
   /* ── Charts ── */
-  .charts {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-    gap: 12px;
-    margin-bottom: 40px;
+  .chart-tab-bar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
   }
-
+  .chart-tab-btn {
+    padding: 4px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .chart-tab-btn:hover { border-color: var(--border-strong); color: var(--text-secondary); }
+  .chart-tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .chart-panel { display: none; }
+  .chart-panel.active { display: block; }
   .chart-box {
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -652,12 +673,7 @@ export class ReportGenerator {
     padding: 20px;
     min-height: 320px;
   }
-
-  .chart-box canvas { max-height: 280px; }
-
-  .chart-box-wide {
-    grid-column: 1 / -1;
-  }
+  .chart-box canvas { max-height: 420px; }
 
   /* ── Table ── */
   .table-wrap {
@@ -814,16 +830,16 @@ export class ReportGenerator {
     </div>
     <div class="sep"></div>
     <div class="pill-group" id="themeGroup">
-      <button class="pill" data-theme="dark">Dark</button>
       <button class="pill on" data-theme="light">Light</button>
+      <button class="pill" data-theme="dark">Dark</button>
     </div>
   </div>
 
   <!-- Hero -->
   <div class="hero">
     <div class="hero-left">
-      <h1><span>${isZh ? theme.title.zh : theme.title.en}</span></h1>
-      <p class="sub">${isZh ? theme.description.zh : theme.description.en}</p>
+      <h1><span data-zh="${theme.title.zh}" data-en="${theme.title.en}">${isZh ? theme.title.zh : theme.title.en}</span></h1>
+      <p class="sub" data-zh="${theme.description.zh}" data-en="${theme.description.en}">${isZh ? theme.description.zh : theme.description.en}</p>
       <div class="hero-tags">
         <div class="hero-tag"><span class="dot"></span>${clusterName}</div>
         <div class="hero-tag">SF ${scale}</div>
@@ -864,7 +880,9 @@ export class ReportGenerator {
       colAvg:'平均', colStd:'偏差', colSpeedup:'加速比', colStatus:'状态',
       barTitle:'查询执行耗时对比 (ms)',
       lineTitle:'冷热性能趋势',
-      volTitle:'缓存性能提升 (%)'
+      volTitle:'缓存性能提升 (%)',
+      flatMetrics:'Flat 表关键指标', flatInfo:'Flat 表测试信息', flatCharts:'Flat 表性能图表', flatDetails:'Flat 表查询明细',
+      chartBar:'柱状图', chartLine:'折线图', chartVol:'波动图'
     },
     en: {
       metrics:'Key Metrics', queries:'OK / Total', successRate:'Success Rate', avgCold:'Avg Cold Run', avgHot:'Avg Hot Run',
@@ -876,7 +894,9 @@ export class ReportGenerator {
       colAvg:'Avg', colStd:'StdDev', colSpeedup:'Speedup', colStatus:'Status',
       barTitle:'Query Execution Time (ms)',
       lineTitle:'Cold vs Hot Trend',
-      volTitle:'Cache Improvement (%)'
+      volTitle:'Cache Improvement (%)',
+      flatMetrics:'Flat Table Key Metrics', flatInfo:'Flat Table Test Info', flatCharts:'Flat Table Charts', flatDetails:'Flat Table Details',
+      chartBar:'Bar', chartLine:'Line', chartVol:'Volatility'
     }
   };
 
@@ -894,12 +914,21 @@ export class ReportGenerator {
     lang = l;
     document.querySelectorAll('#langGroup .pill').forEach(b => b.classList.toggle('on', b.dataset.lang === l));
     document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
-    // Update chart titles
-    const keys = { barChart:'barTitle', lineChart:'lineTitle', volatilityChart:'volTitle' };
-    Object.keys(keys).forEach(id => {
-      if (charts[id]) { charts[id].options.plugins.title.text = t(keys[id]); charts[id].update(); }
+    // Hero title & subtitle
+    const heroTitle = document.querySelector('.hero-left h1 span');
+    if (heroTitle) heroTitle.textContent = heroTitle.dataset[lang === 'zh' ? 'zh' : 'en'] || heroTitle.textContent;
+    const heroSub = document.querySelector('.hero-left .sub');
+    if (heroSub) heroSub.textContent = heroSub.dataset[lang === 'zh' ? 'zh' : 'en'] || heroSub.textContent;
+    // Update chart tab buttons
+    document.querySelectorAll('.chart-tab-btn[data-i18n]').forEach(btn => {
+      btn.textContent = t(btn.dataset.i18n);
     });
-    // Update bar/labels
+    // Chart titles
+    const chartTitleKeys = { barChart:'barTitle', lineChart:'lineTitle', volatilityChart:'volTitle' };
+    Object.keys(chartTitleKeys).forEach(id => {
+      if (charts[id]) { charts[id].options.plugins.title.text = t(chartTitleKeys[id]); charts[id].update(); }
+    });
+    // Regular chart labels
     if (charts.barChart) {
       charts.barChart.data.datasets[0].label = lang === 'zh' ? '冷启动' : 'Cold';
       charts.barChart.data.datasets[1].label = lang === 'zh' ? '热缓存1' : 'Hot 1';
@@ -915,6 +944,7 @@ export class ReportGenerator {
       charts.volatilityChart.data.datasets[0].label = lang === 'zh' ? '缓存提升 %' : 'Improvement %';
       charts.volatilityChart.update();
     }
+    // Flat chart titles & labels
     if (charts.flatBarChart) {
       charts.flatBarChart.data.datasets[0].label = lang === 'zh' ? '冷启动' : 'Cold';
       charts.flatBarChart.data.datasets[1].label = lang === 'zh' ? '热缓存1' : 'Hot 1';
@@ -933,9 +963,7 @@ export class ReportGenerator {
       charts.flatVolatilityChart.options.plugins.title.text = (lang === 'zh' ? 'Flat 表缓存提升' : 'Flat Cache Improvement') + ' (%)';
       charts.flatVolatilityChart.update();
     }
-  }
-
-  function setTheme(th) {
+  }function setTheme(th) {
     mode = th;
     document.body.setAttribute('data-theme', th);
     document.querySelectorAll('#themeGroup .pill').forEach(b => b.classList.toggle('on', b.dataset.theme === th));
@@ -1081,7 +1109,31 @@ export class ReportGenerator {
       }
     });
 
-    // Tab switching
+    // Chart tab switching (regular)
+    document.querySelectorAll('#chartTabBar .chart-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.chart;
+        document.querySelectorAll('#chartTabBar .chart-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.chart === target));
+        document.querySelectorAll('#chart-bar, #chart-line, #chart-volatility').forEach(p => p.classList.toggle('active', p.id === 'chart-' + target));
+        const chartMap = { bar: 'barChart', line: 'lineChart', volatility: 'volatilityChart' };
+        setTimeout(() => { if (charts[chartMap[target]]) charts[chartMap[target]].resize(); }, 50);
+      });
+    });
+
+    // Chart tab switching (flat)
+    if (document.getElementById('flatChartTabBar')) {
+      document.querySelectorAll('#flatChartTabBar .chart-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = btn.dataset.fchart;
+          document.querySelectorAll('#flatChartTabBar .chart-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.fchart === target));
+          document.querySelectorAll('#fchart-bar, #fchart-line, #fchart-volatility').forEach(p => p.classList.toggle('active', p.id === 'fchart-' + target));
+          const fmap = { bar: 'flatBarChart', line: 'flatLineChart', volatility: 'flatVolatilityChart' };
+          setTimeout(() => { if (charts[fmap[target]]) charts[fmap[target]].resize(); }, 50);
+        });
+      });
+    }
+
+    // Tab switching (table)
     document.querySelectorAll('#tabBar .tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const targetTab = btn.dataset.tab;

@@ -55,7 +55,7 @@ export default function ClusterModal({ visible, editingCluster, onClose, onSelec
   const [testingSsh, setTestingSsh] = useState(false)
   const [sqlResult, setSqlResult] = useState<{ success: boolean; message: string } | null>(null)
   const [sshResult, setSshResult] = useState<{ success: boolean; message: string } | null>(null)
-  const { t, language } = useTranslation()
+  const { language } = useTranslation()
 
   useEffect(() => {
     if (visible) {

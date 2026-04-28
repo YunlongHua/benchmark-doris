@@ -1,4 +1,5 @@
 # Doris Benchmark
+中文 | [English](README_EN.md)
 
 基于 Electron + React + TypeScript + Ant Design 构建的桌面应用，用于在 [Apache Doris](https://doris.apache.org) 集群上运行数据库基准测试（SSB、TPC-H、TPC-DS）并生成 HTML 性能报告。
 
