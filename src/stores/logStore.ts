@@ -10,13 +10,9 @@ export interface LogEntry {
 
 interface LogStore {
   logs: LogEntry[]
-  logLevel: 'info' | 'verbose' | 'debug'
-  collapsed: boolean
   autoScroll: boolean
   addLog: (line: string, level: LogLevel) => void
   clearLogs: () => void
-  setLogLevel: (level: 'info' | 'verbose' | 'debug') => void
-  setCollapsed: (collapsed: boolean) => void
   setAutoScroll: (auto: boolean) => void
 }
 
@@ -24,8 +20,6 @@ let logId = 0
 
 export const useLogStore = create<LogStore>((set, get) => ({
   logs: [],
-  logLevel: 'info',
-  collapsed: false,
   autoScroll: true,
 
   addLog: (line, level) => {
@@ -39,7 +33,5 @@ export const useLogStore = create<LogStore>((set, get) => ({
   },
 
   clearLogs: () => set({ logs: [] }),
-  setLogLevel: (level) => set({ logLevel: level }),
-  setCollapsed: (collapsed) => set({ collapsed }),
   setAutoScroll: (auto) => set({ autoScroll: auto })
 }))

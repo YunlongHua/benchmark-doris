@@ -1,4 +1,4 @@
-import { app } from 'electron'
+import { app } from '../shims'
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, unlinkSync } from 'fs'
 import { join, resolve } from 'path'
 import yaml from 'js-yaml'

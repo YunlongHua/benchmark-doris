@@ -6,6 +6,7 @@ interface ClusterStore {
   activeClusterId: string | null
   loadClusters: () => Promise<void>
   addCluster: (config: ClusterConfig) => Promise<void>
+  updateCluster: (oldName: string, config: ClusterConfig) => Promise<void>
   removeCluster: (name: string) => Promise<void>
   setActiveCluster: (name: string | null) => void
 }
@@ -19,11 +20,17 @@ export const useClusterStore = create<ClusterStore>((set, get) => ({
     const current = get().activeClusterId
     set({
       clusters,
-      activeClusterId: clusters.find(c => c.name === current)?.name ?? clusters[0]?.name ?? null
+      activeClusterId: clusters.find(c => c.name === current)?.name ?? null
     })
   },
 
   addCluster: async (config) => {
+    await window.electronAPI.config.save(config)
+    await get().loadClusters()
+  },
+
+  updateCluster: async (oldName, config) => {
+    await window.electronAPI.config.delete(oldName)
     await window.electronAPI.config.save(config)
     await get().loadClusters()
   },

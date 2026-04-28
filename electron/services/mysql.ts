@@ -1,62 +1,62 @@
-import { spawn } from 'child_process'
+import mysql from 'mysql2/promise'
 import { ClusterConfig } from '../../src/types'
 import { SqlResult } from '../../src/types'
 
-const MYSQL_PATHS = [
-  'mysql',
-  'C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysql.exe',
-  'C:\\Program Files\\MySQL\\MySQL Server 5.7\\bin\\mysql.exe'
-]
+let pool: mysql.Pool | null = null
+let currentClusterKey: string = ''
 
-function findMySQL(): string {
-  for (const p of MYSQL_PATHS) {
-    try {
-      const result = spawn(p, ['--version'], { shell: false })
-      if (result.pid) { result.kill(); return p }
-    } catch { continue }
+function getClusterKey(cluster: ClusterConfig): string {
+  return `${cluster.feHost}:${cluster.feQueryPort}:${cluster.user}`
+}
+
+function getPool(cluster: ClusterConfig): mysql.Pool {
+  const clusterKey = getClusterKey(cluster)
+
+  if (pool && currentClusterKey === clusterKey) {
+    return pool
   }
-  return 'mysql'
+
+  if (pool) {
+    pool.end().catch(() => {})
+  }
+
+  pool = mysql.createPool({
+    host: cluster.feHost,
+    port: cluster.feQueryPort,
+    user: cluster.user,
+    password: cluster.password,
+    database: '',
+    connectTimeout: 10000,
+    supportNumbers: true,
+    enabledFunctions: true,
+    enableCleartextPlugin: true
+  })
+
+  currentClusterKey = clusterKey
+  return pool
 }
 
 export class MySQLService {
-  execute(sql: string, cluster: ClusterConfig): Promise<SqlResult> {
-    return new Promise((resolve, reject) => {
-      const mysqlExe = findMySQL()
-      const args = [
-        `-h${cluster.feHost}`,
-        `-P${cluster.feQueryPort}`,
-        `-u${cluster.user}`,
-        `-p${cluster.password}`,
-        '-e',
-        sql,
-        '--batch',
-        '--skip-column-names'
-      ]
+  async execute(sql: string, cluster: ClusterConfig): Promise<SqlResult> {
+    const connection = getPool(cluster)
+    try {
+      const [rows, fields] = await connection.query(sql)
+      if (Array.isArray(rows)) {
+        const columns = fields ? fields.map((f: mysql.FieldPacket) => f.name) : []
+        return { columns, rows: rows as Record<string, unknown>[] }
+      } else {
+        return { columns: [], rows: [] }
+      }
+    } catch (err) {
+      throw new Error((err as Error).message)
+    }
+  }
 
-      const proc = spawn(mysqlExe, args, { shell: false })
-      let stdout = ''
-      let stderr = ''
-
-      proc.stdout?.on('data', (data: Buffer) => { stdout += data.toString() })
-      proc.stderr?.on('data', (data: Buffer) => { stderr += data.toString() })
-
-      proc.on('close', (code) => {
-        if (code !== 0) {
-          reject(new Error(stderr || `mysql exited with code ${code}`))
-          return
-        }
-        const lines = stdout.trim().split('\n')
-        const columns = lines[0]?.split('\t') || []
-        const rows = lines.slice(1).map(line => {
-          const values = line.split('\t')
-          const row: Record<string, unknown> = {}
-          columns.forEach((col, i) => { row[col] = values[i] })
-          return row
-        })
-        resolve({ columns, rows })
-      })
-
-      proc.on('error', (err) => reject(err))
-    })
+  async closePool(): Promise<void> {
+    if (pool) {
+      await pool.end()
+      pool = null
+      currentClusterKey = ''
+    }
   }
 }

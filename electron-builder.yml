@@ -1,9 +1,12 @@
 appId: com.apache.doris.benchmark
 productName: Doris Benchmark
-include:
-  - dist/**/*
-  - dist-electron/**/*
-  - tools/**/*
+files:
+  - dist
+  - dist-electron
+  - package.json
+  - tools
 win:
   target:
-    - nsis
+    - dir
+  executableName: Doris Benchmark
+asar: false

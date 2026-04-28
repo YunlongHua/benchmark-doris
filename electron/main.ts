@@ -1,19 +1,20 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+// @ts-nocheck - Electron runtime globals
 import { join } from 'path'
 import { registerIpcHandlers } from './ipc/handlers'
+import { app, BrowserWindow } from './shims'
 
-process.env.DIST_ELECTRON = join(__dirname, '..')
-process.env.DIST = join(process.env.DIST_ELECTRON, '../dist')
+process.env.DIST_ELECTRON = __dirname
+process.env.DIST = join(__dirname, '../dist')
 process.env.VITE_PUBLIC = join(process.env.DIST_ELECTRON, '../public')
 
-let mainWindow: BrowserWindow | null = null
+let mainWindow: any = null
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1400,
-    height: 900,
-    minWidth: 1100,
-    minHeight: 700,
+    width: 1280,
+    height: 800,
+    minWidth: 1000,
+    minHeight: 600,
     title: 'Doris Benchmark',
     webPreferences: {
       preload: join(__dirname, 'preload.js'),

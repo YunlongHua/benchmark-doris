@@ -6,9 +6,14 @@ export interface ClusterConfig {
   name: string
   feHost: string
   feHttpPort: number
+  feHttpsPort: number
   feQueryPort: number
   user: string
   password: string
+  sshHost: string
+  sshPort: number
+  sshUser: string
+  sshPassword: string
   createdAt: string
 }
 
@@ -50,7 +55,7 @@ export interface IElectronAPI {
     export: (result: TestResult, savePath: string) => Promise<void>
   }
   sql: {
-    execute: (sql: string, clusterId: string) => Promise<SqlResult>
+    execute: (sql: string, cluster: ClusterConfig) => Promise<SqlResult>
   }
   system: {
     checkDeps: () => Promise<{ bash: boolean; mysql: boolean }>

@@ -1,0 +1,173 @@
+#!/usr/bin/env bash
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+##############################################################
+# This script is used to run SSB flat queries
+##############################################################
+
+set -eo pipefail
+
+ROOT=$(dirname "$0")
+ROOT=$(
+    cd "${ROOT}"
+    pwd
+)
+
+CURDIR=${ROOT}
+QUERIES_DIR=${CURDIR}/../ssb-flat-queries
+
+usage() {
+    echo "
+This script is used to run SSB 13 flat queries,
+will use mysql client to connect Doris server which parameter is specified in doris-cluster.conf file.
+Usage: $0
+  "
+    exit 1
+}
+
+OPTS=$(getopt \
+    -n "$0" \
+    -o '' \
+    -o 'h' \
+    -- "$@")
+
+eval set -- "${OPTS}"
+HELP=0
+
+if [[ $# == 0 ]]; then
+    usage
+fi
+
+while true; do
+    case "$1" in
+    -h)
+        HELP=1
+        shift
+        ;;
+    --)
+        shift
+        break
+        ;;
+    *)
+        echo "Internal error"
+        exit 1
+        ;;
+    esac
+done
+
+if [[ "${HELP}" -eq 1 ]]; then
+    usage
+fi
+
+check_prerequest() {
+    local CMD=$1
+    local NAME=$2
+    if ! ${CMD}; then
+        echo "${NAME} is missing. This script depends on mysql to create tables in Doris."
+        exit 1
+    fi
+}
+
+check_prerequest "mysql --version" "mysql"
+
+_has_fe_host=0; env | grep -q '^FE_HOST=' && _has_fe_host=1
+_has_fe_query_port=0; env | grep -q '^FE_QUERY_PORT=' && _has_fe_query_port=1
+_has_user=0; env | grep -q '^USER=' && _has_user=1
+_has_password=0; env | grep -q '^PASSWORD=' && _has_password=1
+source "${CURDIR}/../conf/doris-cluster.conf"
+[[ ${_has_fe_host} -eq 1 ]] && FE_HOST="${FE_HOST}"
+[[ ${_has_fe_query_port} -eq 1 ]] && FE_QUERY_PORT="${FE_QUERY_PORT}"
+[[ ${_has_user} -eq 1 ]] && USER="${USER}"
+[[ ${_has_password} -eq 1 ]] && PASSWORD="${PASSWORD}"
+
+echo "FE_HOST: ${FE_HOST:='127.0.0.1'}"
+echo "FE_QUERY_PORT: ${FE_QUERY_PORT:='9030'}"
+echo "USER: ${USER:='root'}"
+echo "DB: ${DB:='ssb'}"
+
+run_sql() {
+    echo "$@"
+    export MYSQL_PWD="${PASSWORD}"
+    LIBMYSQL_ENABLE_CLEARTEXT_PLUGIN=1 mysql -h"${FE_HOST}" -P"${FE_QUERY_PORT}" -u"${USER}" -D"${DB}" -e "$@"
+    unset MYSQL_PWD
+}
+
+echo '============================================'
+echo 'Running SSB flat queries...'
+echo '============================================'
+
+RESULT_DIR="${CURDIR}/result-flat"
+if [[ -d "${RESULT_DIR}" ]]; then
+    rm -r "${RESULT_DIR}"
+fi
+mkdir -p "${RESULT_DIR}"
+touch result-flat.csv
+
+cold_run_sum=0
+best_hot_run_sum=0
+
+for i in '1.1' '1.2' '1.3' '2.1' '2.2' '2.3' '3.1' '3.2' '3.3' '3.4' '4.1' '4.2' '4.3'; do
+    cold=0
+    hot1=0
+    hot2=0
+    echo -ne "flat_q${i}\t" | tee -a result-flat.csv
+    start=$(date +%s%3N)
+    if ! output=$(LIBMYSQL_ENABLE_CLEARTEXT_PLUGIN=1 MYSQL_PWD="${PASSWORD}" mysql -h"${FE_HOST}" -u"${USER}" -P"${FE_QUERY_PORT}" -D"${DB}" --comments \
+        <"${QUERIES_DIR}/q${i}.sql" 2>&1); then
+        printf "Error: Failed to execute flat query q%s (cold run). Output:\n%s\n" "${i}" "${output}" >&2
+        continue
+    fi
+    end=$(date +%s%3N)
+    cold=$((end - start))
+    echo -ne "${cold}\t" | tee -a result-flat.csv
+
+    start=$(date +%s%3N)
+    if ! output=$(LIBMYSQL_ENABLE_CLEARTEXT_PLUGIN=1 MYSQL_PWD="${PASSWORD}" mysql -h"${FE_HOST}" -u"${USER}" -P"${FE_QUERY_PORT}" -D"${DB}" --comments \
+        <"${QUERIES_DIR}/q${i}.sql" 2>&1); then
+        printf "Error: Failed to execute flat query q%s (hot run 1). Output:\n%s\n" "${i}" "${output}" >&2
+        continue
+    fi
+    end=$(date +%s%3N)
+    hot1=$((end - start))
+    echo -ne "${hot1}\t" | tee -a result-flat.csv
+
+    start=$(date +%s%3N)
+    if ! output=$(LIBMYSQL_ENABLE_CLEARTEXT_PLUGIN=1 MYSQL_PWD="${PASSWORD}" mysql -h"${FE_HOST}" -u"${USER}" -P"${FE_QUERY_PORT}" -D"${DB}" --comments \
+        <"${QUERIES_DIR}/q${i}.sql" 2>&1); then
+        printf "Error: Failed to execute flat query q%s (hot run 2). Output:\n%s\n" "${i}" "${output}" >&2
+        continue
+    fi
+    end=$(date +%s%3N)
+    hot2=$((end - start))
+    echo -ne "${hot2}\t" | tee -a result-flat.csv
+
+    cold_run_sum=$((cold_run_sum + cold))
+    if [[ ${hot1} -lt ${hot2} ]]; then
+        best_hot_run_sum=$((best_hot_run_sum + hot1))
+        echo -ne "${hot1}" | tee -a result-flat.csv
+        echo "" | tee -a result-flat.csv
+    else
+        best_hot_run_sum=$((best_hot_run_sum + hot2))
+        echo -ne "${hot2}" | tee -a result-flat.csv
+        echo "" | tee -a result-flat.csv
+    fi
+done
+
+echo "Total flat cold run time: ${cold_run_sum} ms"
+echo "Total flat hot run time: ${best_hot_run_sum} ms"
+echo 'Finish ssb flat queries.'
