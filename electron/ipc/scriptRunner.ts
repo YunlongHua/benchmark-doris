@@ -119,6 +119,9 @@ async function uploadDirectory(client: Client, localPath: string, remotePath: st
 
 export class ScriptRunner {
   private currentClient: Client | null = null
+  private currentSshConfig: ConnectConfig | null = null
+  private currentStream: { stop: () => void } | null = null
+  private stopped: boolean = false
   private resultParser = new ResultParser()
   private mysqlService = new MySQLService()
 
@@ -147,8 +150,27 @@ export class ScriptRunner {
     onLog(`App path: ${app.getAppPath()}`, 'info')
     onLog(`Uploading ${testType}-tools from ${localTestToolsPath} to ${remoteTestToolsPath}...`, 'info')
 
-    return new Promise((resolve, reject) => {
+return new Promise((resolve, reject) => {
       const client = new Client()
+      this.currentClient = client
+      this.currentSshConfig = sshConfig
+      this.currentStream = {
+        stop: () => {
+          try {
+            client.exec('kill -9 -$(cat /tmp/benchmark_main.pid 2>/dev/null) 2>/dev/null; exit 0', (err, stream) => {
+              if (err) return
+              stream.on('close', () => {
+                try { client.end() } catch (_) {}
+              })
+              stream.on('error', () => {
+                try { client.end() } catch (_) {}
+              })
+            })
+          } catch (_) {
+            try { client.end() } catch (_) {}
+          }
+        }
+      }
       client.on('ready', async () => {
         try {
           await new Promise<void>((res, rej) => {
@@ -170,9 +192,9 @@ export class ScriptRunner {
 export FE_HTTP_PORT=${cleanPort(cluster.feHttpPort, 29980)}
 export FE_HTTPS_PORT=${cleanPort(cluster.feHttpsPort, 29991)}
 export FE_QUERY_PORT=${cleanPort(cluster.feQueryPort, 29982)}
-export USER='${clean(cluster.user) || 'root'}'
-export PASSWORD='${clean(cluster.password) || ''}'
-export DB='${testType}'
+USER='${clean(cluster.user) || 'root'}'
+PASSWORD='${clean(cluster.password) || ''}'
+DB='${testType}'
 `
           onLog(`Updating remote config with FE_HOST=${clean(cluster.feHost)}...`, 'info')
           await new Promise<void>((res, rej) => {
@@ -188,16 +210,39 @@ ${confContent}EOFCONF`, (err, stream) => {
           onLog(`Remote config written to ${remoteConfPath}`, 'info')
 
           client.end()
+          this.currentClient = null
+          this.currentSshConfig = null
+          this.currentStream = null
           onLog(`Upload complete: ${testType}-tools deployed to ${remoteTestToolsPath}`, 'info')
-          resolve()
+          if (this.stopped) {
+            this.stopped = false
+            reject(new Error('Step manually stopped'))
+          } else {
+            resolve()
+          }
         } catch (err) {
           client.end()
-          reject(err)
+          this.currentClient = null
+          this.currentSshConfig = null
+          this.currentStream = null
+          if (this.stopped) {
+            this.stopped = false
+            reject(new Error('Step manually stopped'))
+          } else {
+            reject(err)
+          }
         }
       })
       client.on('error', (err) => {
+        this.currentClient = null
+        this.currentStream = null
         onLog(`SSH connection error: ${err.message}`, 'error')
-        reject(err)
+        if (this.stopped) {
+          this.stopped = false
+          reject(new Error('Step manually stopped'))
+        } else {
+          reject(err)
+        }
       })
       client.connect(sshConfig)
     })
@@ -351,9 +396,42 @@ ${confContent}EOFCONF`, (err, stream) => {
   }
 
   stop(): void {
-    if (this.currentClient) {
-      this.currentClient.end()
-      this.currentClient = null
+    this.stopped = true
+    const client = this.currentClient
+    const sshConfig = this.currentSshConfig
+    this.currentClient = null
+    this.currentSshConfig = null
+
+    // Create a dedicated connection to kill remote processes.
+    // This is independent of the running connection, so it works even
+    // if the original connection is hung or unresponsive.
+    if (sshConfig) {
+      const killer = new Client()
+      killer.on('ready', () => {
+        killer.exec(
+          'PID=$(cat /tmp/benchmark_main.pid 2>/dev/null); ' +
+          '[ -n "$PID" ] && kill -9 -${PID} 2>/dev/null; ' +
+          'pkill -9 -f "make" 2>/dev/null; ' +
+          'pkill -9 -f "dsdgen" 2>/dev/null; ' +
+          'pkill -9 -f "dbgen" 2>/dev/null; ' +
+          'pkill -9 -f "qgen" 2>/dev/null',
+          (_err, stream) => {
+            if (stream) {
+              stream.on('close', () => killer.end())
+              stream.on('error', () => killer.end())
+            } else {
+              killer.end()
+            }
+          }
+        )
+      })
+      killer.on('error', () => {})
+      killer.connect(sshConfig)
+    }
+
+    // Destroy the original connection to interrupt in-progress I/O
+    if (client) {
+      try { client.destroy() } catch (_) {}
     }
   }
 
@@ -624,11 +702,12 @@ ${confContent}EOFCONF`, (err, stream) => {
     dataPath: string,
     onLog: LogCallback
   ): Promise<void> {
-    return new Promise((resolve, reject) => {
+return new Promise((resolve, reject) => {
       const client = new Client()
       this.currentClient = client
 
       const sshConfig = this.getSshConfig(cluster)
+      this.currentSshConfig = sshConfig
       const remoteBinPath = `${REMOTE_TOOLS_PATH}/${testType}-tools/bin`
 
       const clean = (v: string | number | undefined) => String(v || '').trim().replace(/\r/g, '')
@@ -649,23 +728,63 @@ ${confContent}EOFCONF`, (err, stream) => {
         `DORIS_BENCHMARK_DATA=${dataPath}`
       ].filter(Boolean).join(' ')
 
-      const command = `cd ${remoteBinPath} && chmod +x ${script} && sed -i 's/\r$//' ${script} && find ${remoteBinPath}/../conf -name "*.conf" -exec sed -i 's/\r$//' {} \\; && sed -i 's/curl -sk/curl -sk --tlsv1.2/g' ${script} && sed -i 's/curl -k/curl -k --tlsv1.2/g' ${script} && trap 'kill 0 2>/dev/null' EXIT && ${envVars} bash ${script} ${args.join(' ')}`
+      const command = `echo $$ > /tmp/benchmark_main.pid && cd ${remoteBinPath} && chmod +x ${script} && sed -i 's/\r$//' ${script} && find ${remoteBinPath}/../conf -name "*.conf" -exec sed -i 's/\r$//' {} \\; && sed -i '/tlsv1\.2/!s/curl -sk /curl -sk --tlsv1.2 /g' ${script} && sed -i '/tlsv1\.2/!s/curl -k /curl -k --tlsv1.2 /g' ${script} && trap 'kill -9 0 2>/dev/null' EXIT INT TERM HUP && ${envVars} bash ${script} ${args.join(' ')}`
+
+      const streamWrapper = {
+        stop: () => {
+          try {
+            client.exec('PGID=$(ps -o pgid=$$ | tr -d " "); kill -9 -${PGID} 2>/dev/null; exit 0', (err, stream) => {
+              if (err) return
+              stream.on('close', () => {
+                try { client.end() } catch (_) {}
+              })
+              stream.on('error', () => {
+                try { client.end() } catch (_) {}
+              })
+            })
+          } catch (_) {
+            try { client.end() } catch (_) {}
+          }
+        }
+      }
+      this.currentStream = streamWrapper
 
       client.on('ready', () => {
         client.exec(command, (err, stream) => {
           if (err) {
             client.end()
+            this.currentClient = null
+            this.currentSshConfig = null
+          this.currentStream = null
             reject(err)
             return
           }
 
-          stream.on('close', (code: number) => {
+          stream.on('close', (code: number | null) => {
             client.end()
             this.currentClient = null
-            if (code === 0) {
+            this.currentSshConfig = null
+          this.currentStream = null
+            if (this.stopped) {
+              this.stopped = false
+              reject(new Error('Step manually stopped'))
+            } else if (code === 0 || code === null) {
               resolve()
             } else {
               reject(new Error(`Script exited with code ${code}`))
+            }
+          })
+
+          stream.on('error', (err: Error) => {
+            client.end()
+            this.currentClient = null
+            this.currentSshConfig = null
+          this.currentStream = null
+            if (this.stopped) {
+              this.stopped = false
+              reject(new Error('Step manually stopped'))
+            } else {
+              reject(new Error(`Stream error: ${err.message}`))
             }
           })
 
@@ -685,7 +804,13 @@ ${confContent}EOFCONF`, (err, stream) => {
 
       client.on('error', (err) => {
         this.currentClient = null
-        reject(err)
+        this.currentStream = null
+        if (this.stopped) {
+          this.stopped = false
+          reject(new Error('Step manually stopped'))
+        } else {
+          reject(err)
+        }
       })
 
       client.connect(sshConfig)

@@ -8,6 +8,7 @@ export const translations = {
     createTables: '初始化表',
     loadData: '加载数据',
     runQueries: '运行查询',
+    uploadTools: '上传工具',
   },
   'en-US': {
     logPanel: 'Log Panel',
@@ -18,6 +19,7 @@ export const translations = {
     createTables: 'Create Tables',
     loadData: 'Load Data',
     runQueries: 'Run Queries',
+    uploadTools: 'Upload Tools',
   }
 }
 

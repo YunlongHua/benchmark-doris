@@ -37,13 +37,13 @@ TPCDS_DBGEN_DIR="${CURDIR}/DSGen-software-code-3.2.0rc2/tools"
 check_prerequest() {
     local CMD=$1
     local NAME=$2
-    if ! ${CMD} >/dev/null; then
+    if ! command -v ${CMD} >/dev/null 2>&1; then
         echo "${NAME} is missing. This script depends on unzip to extract files from TPC-DS_Tools_v3.2.0.zip"
         exit 1
     fi
 }
 
-check_prerequest "unzip -h" "unzip"
+check_prerequest "unzip" "unzip"
 
 # download tpcds tools package first
 if [[ -d "${CURDIR}/DSGen-software-code-3.2.0rc2" ]]; then
@@ -52,15 +52,16 @@ if [[ -d "${CURDIR}/DSGen-software-code-3.2.0rc2" ]]; then
 fi
 
 if [[ -f "${CURDIR}/TPC-DS_Tools_v3.2.0rc2.zip" ]]; then
-    unzip "${CURDIR}/TPC-DS_Tools_v3.2.0rc2.zip" -d "${CURDIR}/"
+    echo "Using local TPC-DS_Tools_v3.2.0rc2.zip"
 else
-    wget "https://qa-build.oss-cn-beijing.aliyuncs.com/tools/TPC-DS_Tools_v3.2.0rc2.zip" -O "${CURDIR}/TPC-DS_Tools_v3.2.0rc2.zip"
-    unzip "${CURDIR}/TPC-DS_Tools_v3.2.0rc2.zip" -d "${CURDIR}/"
+    wget -t 3 -T 30 "https://qa-build.oss-cn-beijing.aliyuncs.com/tools/TPC-DS_Tools_v3.2.0rc2.zip" -O "${CURDIR}/TPC-DS_Tools_v3.2.0rc2.zip"
 fi
+echo "Extracting tools source only (skipping ref_data)..."
+unzip -o "${CURDIR}/TPC-DS_Tools_v3.2.0rc2.zip" "TPC-DS_Tools_v3.2.0rc2/tools/*" -d "${CURDIR}/"
 
-# compile tpcds-dsdgen
+# compile tpcds-dsdgen with 10-minute timeout
 cd "${TPCDS_DBGEN_DIR}/"
-make >/dev/null
+timeout 600 make >/dev/null 2>&1 || { echo "Build timed out or failed!"; exit 1; }
 cd -
 
 # check

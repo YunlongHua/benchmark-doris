@@ -81,6 +81,6 @@ export interface SqlResult {
 }
 
 export type TestType = 'ssb' | 'tpch' | 'tpcds'
-export type TestStep = 1 | 2 | 3 | 4 | 5
+export type TestStep = 1 | 2 | 3 | 4 | 5 | 6
 export type TestStatus = 'idle' | 'running' | 'success' | 'error'
 export type LogLevel = 'info' | 'error' | 'warn'

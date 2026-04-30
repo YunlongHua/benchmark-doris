@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Form, Input, InputNumber, Button, Space, message, Popconfirm } from 'antd'
-import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons'
+import { Form, Input, InputNumber, Button, Space, message, Popconfirm, Tooltip } from 'antd'
+import { CheckCircleOutlined, CloseCircleOutlined, QuestionCircleOutlined } from '@ant-design/icons'
 import { useClusterStore } from '../stores/clusterStore'
 import { ClusterConfig } from '../types'
 import { useTranslation } from '../hooks/useTranslation'
@@ -48,6 +48,17 @@ const SectionCard = ({ title, children }: { title: string; children: React.React
   </div>
 )
 
+const FieldLabel = ({ label, tip }: { label: string; tip?: string }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
+    <span style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>{label}</span>
+    {tip && (
+      <Tooltip title={<div style={{ maxWidth: 300, fontSize: 12, lineHeight: 1.6 }}>{tip}</div>}>
+        <QuestionCircleOutlined style={{ fontSize: 12, color: '#94a3b8', cursor: 'help' }} />
+      </Tooltip>
+    )}
+  </div>
+)
+
 export default function ClusterModal({ visible, editingCluster, onClose, onSelect }: Props) {
   const { clusters, addCluster, removeCluster, updateCluster } = useClusterStore()
   const [form] = Form.useForm()
@@ -56,6 +67,22 @@ export default function ClusterModal({ visible, editingCluster, onClose, onSelec
   const [sqlResult, setSqlResult] = useState<{ success: boolean; message: string } | null>(null)
   const [sshResult, setSshResult] = useState<{ success: boolean; message: string } | null>(null)
   const { language } = useTranslation()
+  const isZh = language === 'zh-CN'
+
+  const tips = {
+    feHost: isZh
+      ? 'Doris FE 节点IP，可以通过登录Manager，单击"集群 > 服务 > Doris > 示例"，获取其中一个FE节点的IP或该节点的EIP。'
+      : 'Doris FE node IP. Log in to Manager, click "Cluster > Services > Doris > Instances", and obtain the IP or EIP of one of the FE nodes.',
+    feHttpPort: isZh
+      ? 'Doris FE的HTTP端口，默认为29980，也可以通过登录Manager，单击"集群 > 服务 > Doris > 配置"，查询Doris服务的"http_port"参数获取。'
+      : 'Doris FE HTTP port, default 29980. You can also check the "http_port" parameter via Manager under "Cluster > Services > Doris > Configurations".',
+    feHttpsPort: isZh
+      ? 'Doris FE的HTTPs端口，默认为29991，也可以通过登录Manager，单击"集群 > 服务 > Doris > 配置"，查询Doris服务的"https_port"参数获取。'
+      : 'Doris FE HTTPS port, default 29991. You can also check the "https_port" parameter via Manager under "Cluster > Services > Doris > Configurations".',
+    feQueryPort: isZh
+      ? 'Doris FE通过MySQL协议查询连接端口，默认为29982，也可以通过登录Manager，单击"集群 > 服务 > Doris > 配置"，查询Doris服务的"query_port"参数获取。'
+      : 'Doris FE MySQL protocol query port, default 29982. You can also check the "query_port" parameter via Manager under "Cluster > Services > Doris > Configurations".'
+  }
 
   useEffect(() => {
     if (visible) {
@@ -236,10 +263,11 @@ export default function ClusterModal({ visible, editingCluster, onClose, onSelec
           <Form form={form} layout="vertical">
             {/* Cluster Name */}
             <div style={{ marginBottom: 20 }}>
-              <Form.Item name="name" rules={[{ required: true, message: language === 'zh-CN' ? '请输入集群名称' : 'Please enter cluster name' }]} style={{ marginBottom: 0 }}>
+              <FieldLabel label={isZh ? '集群名称' : 'Cluster Name'} />
+              <Form.Item name="name" rules={[{ required: true, message: isZh ? '请输入集群名称' : 'Please enter cluster name' }]} style={{ marginBottom: 0 }}>
                 <Input
                   disabled={!!editingCluster}
-                  placeholder={language === 'zh-CN' ? '集群名称' : 'Cluster Name'}
+                  placeholder={isZh ? '集群名称' : 'Cluster Name'}
                   style={{ width: '100%', height: 36 }}
                 />
               </Form.Item>
@@ -248,9 +276,10 @@ export default function ClusterModal({ visible, editingCluster, onClose, onSelec
             {/* Doris Connection Card */}
             <SectionCard title={language === 'zh-CN' ? 'Doris 连接' : 'Doris Connection'}>
               <div style={{ marginBottom: 12 }}>
-                <Form.Item name="feHost" rules={[{ required: true, message: language === 'zh-CN' ? '请输入 FE 主机地址' : 'Please enter FE host' }]} style={{ marginBottom: 0 }}>
+                <FieldLabel label={isZh ? 'FE 主机IP' : 'FE Host IP'} tip={tips.feHost} />
+                <Form.Item name="feHost" rules={[{ required: true, message: isZh ? '请输入 FE 主机地址' : 'Please enter FE host' }]} style={{ marginBottom: 0 }}>
                   <Input
-                    placeholder={language === 'zh-CN' ? 'FE 主机地址' : 'FE Host'}
+                    placeholder={isZh ? 'FE 主机IP' : 'FE Host IP'}
                     style={{ width: '100%', height: 36 }}
                   />
                 </Form.Item>
@@ -258,25 +287,40 @@ export default function ClusterModal({ visible, editingCluster, onClose, onSelec
 
               {/* Ports Grid */}
               <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-                <Form.Item name="feHttpPort" rules={[{ required: true, message: 'Required' }]} style={{ marginBottom: 0, flex: 1 }}>
-                  <InputNumber placeholder="HTTP" style={{ width: '100%', height: 36 }} />
-                </Form.Item>
-                <Form.Item name="feHttpsPort" style={{ marginBottom: 0, flex: 1 }}>
-                  <InputNumber placeholder="HTTPS" style={{ width: '100%', height: 36 }} />
-                </Form.Item>
-                <Form.Item name="feQueryPort" rules={[{ required: true, message: 'Required' }]} style={{ marginBottom: 0, flex: 1 }}>
-                  <InputNumber placeholder="Query" style={{ width: '100%', height: 36 }} />
-                </Form.Item>
+                <div style={{ flex: 1 }}>
+                  <FieldLabel label={isZh ? 'HTTP 端口' : 'HTTP Port'} tip={tips.feHttpPort} />
+                  <Form.Item name="feHttpPort" rules={[{ required: true, message: 'Required' }]} style={{ marginBottom: 0 }}>
+                    <InputNumber placeholder="HTTP" style={{ width: '100%', height: 36 }} />
+                  </Form.Item>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <FieldLabel label={isZh ? 'HTTPS 端口' : 'HTTPS Port'} tip={tips.feHttpsPort} />
+                  <Form.Item name="feHttpsPort" style={{ marginBottom: 0 }}>
+                    <InputNumber placeholder="HTTPS" style={{ width: '100%', height: 36 }} />
+                  </Form.Item>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <FieldLabel label={isZh ? 'Query 端口' : 'Query Port'} tip={tips.feQueryPort} />
+                  <Form.Item name="feQueryPort" rules={[{ required: true, message: 'Required' }]} style={{ marginBottom: 0 }}>
+                    <InputNumber placeholder="Query" style={{ width: '100%', height: 36 }} />
+                  </Form.Item>
+                </div>
               </div>
 
               {/* User & Password */}
               <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-                <Form.Item name="user" rules={[{ required: true, message: 'Required' }]} style={{ marginBottom: 0, flex: 1 }}>
-                  <Input placeholder={language === 'zh-CN' ? '用户名' : 'Username'} style={{ width: '100%', height: 36 }} />
-                </Form.Item>
-                <Form.Item name="password" style={{ marginBottom: 0, flex: 1 }}>
-                  <Input.Password placeholder={language === 'zh-CN' ? '密码' : 'Password'} style={{ width: '100%', height: 36 }} />
-                </Form.Item>
+                <div style={{ flex: 1 }}>
+                  <FieldLabel label={isZh ? '用户名' : 'Username'} />
+                  <Form.Item name="user" rules={[{ required: true, message: 'Required' }]} style={{ marginBottom: 0 }}>
+                    <Input placeholder={isZh ? '用户名' : 'Username'} style={{ width: '100%', height: 36 }} />
+                  </Form.Item>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <FieldLabel label={isZh ? '密码' : 'Password'} />
+                  <Form.Item name="password" style={{ marginBottom: 0 }}>
+                    <Input.Password placeholder={isZh ? '密码' : 'Password'} style={{ width: '100%', height: 36 }} />
+                  </Form.Item>
+                </div>
               </div>
 
               {/* Test Connection */}
@@ -307,26 +351,38 @@ export default function ClusterModal({ visible, editingCluster, onClose, onSelec
             </SectionCard>
 
             {/* SSH Connection Card */}
-            <SectionCard title={language === 'zh-CN' ? 'SSH 连接' : 'SSH Connection'}>
+            <SectionCard title={isZh ? '压测机SSH连接' : 'Benchmark Machine SSH'}>
               <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-                <Form.Item name="sshHost" style={{ marginBottom: 0, flex: 2 }}>
-                  <Input
-                    placeholder={language === 'zh-CN' ? 'SSH 主机' : 'SSH Host'}
-                    style={{ width: '100%', height: 36 }}
-                  />
-                </Form.Item>
-                <Form.Item name="sshPort" style={{ marginBottom: 0, flex: 1 }}>
-                  <InputNumber placeholder={language === 'zh-CN' ? '端口' : 'Port'} style={{ width: '100%', height: 36 }} />
-                </Form.Item>
+                <div style={{ flex: 2 }}>
+                  <FieldLabel label={isZh ? 'SSH 主机' : 'SSH Host'} />
+                  <Form.Item name="sshHost" style={{ marginBottom: 0 }}>
+                    <Input
+                      placeholder={isZh ? 'SSH 主机' : 'SSH Host'}
+                      style={{ width: '100%', height: 36 }}
+                    />
+                  </Form.Item>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <FieldLabel label={isZh ? 'SSH 端口' : 'SSH Port'} />
+                  <Form.Item name="sshPort" style={{ marginBottom: 0 }}>
+                    <InputNumber placeholder={isZh ? '端口' : 'Port'} style={{ width: '100%', height: 36 }} />
+                  </Form.Item>
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-                <Form.Item name="sshUser" style={{ marginBottom: 0, flex: 1 }}>
-                  <Input placeholder={language === 'zh-CN' ? '用户名' : 'Username'} style={{ width: '100%', height: 36 }} />
-                </Form.Item>
-                <Form.Item name="sshPassword" style={{ marginBottom: 0, flex: 1 }}>
-                  <Input.Password placeholder={language === 'zh-CN' ? '密码' : 'Password'} style={{ width: '100%', height: 36 }} />
-                </Form.Item>
+                <div style={{ flex: 1 }}>
+                  <FieldLabel label={isZh ? 'SSH 用户名' : 'SSH User'} />
+                  <Form.Item name="sshUser" style={{ marginBottom: 0 }}>
+                    <Input placeholder={isZh ? '用户名' : 'Username'} style={{ width: '100%', height: 36 }} />
+                  </Form.Item>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <FieldLabel label={isZh ? 'SSH 密码' : 'SSH Password'} />
+                  <Form.Item name="sshPassword" style={{ marginBottom: 0 }}>
+                    <Input.Password placeholder={isZh ? '密码' : 'Password'} style={{ width: '100%', height: 36 }} />
+                  </Form.Item>
+                </div>
               </div>
 
               {/* Test SSH */}

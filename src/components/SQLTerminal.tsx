@@ -4,6 +4,7 @@ import { PlayCircleOutlined, FormOutlined, ClearOutlined } from '@ant-design/ico
 import { format as formatSql } from 'sql-formatter'
 import { useClusterStore } from '../stores/clusterStore'
 import { useTranslation } from '../hooks/useTranslation'
+import { useThemeStore } from '../stores/themeStore'
 
 export default function SQLTerminal() {
   const [sql, setSql] = useState('')
@@ -12,6 +13,8 @@ export default function SQLTerminal() {
   const [error, setError] = useState<string | null>(null)
   const { activeClusterId, clusters } = useClusterStore()
   const { t, language } = useTranslation()
+  const themeMode = useThemeStore(s => s.theme)
+  const isDark = themeMode === 'dark'
 
   const activeCluster = clusters.find(c => c.name === activeClusterId)
 
@@ -46,15 +49,20 @@ export default function SQLTerminal() {
     setError(null)
   }
 
+  const headerBg = isDark ? '#1e293b' : '#fff'
+  const bodyBg = isDark ? '#0f172a' : '#fafafa'
+  const borderColor = isDark ? '#334155' : '#e2e8f0'
+  const resultBg = isDark ? '#1e293b' : '#fff'
+
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#fafafa' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: bodyBg }}>
       <div style={{
         padding: '8px 12px',
-        borderBottom: '1px solid #e2e8f0',
+        borderBottom: `1px solid ${borderColor}`,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        background: '#fff',
+        background: headerBg,
         flexShrink: 0
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -91,7 +99,7 @@ export default function SQLTerminal() {
             fontFamily: "'SF Mono', Monaco, Consolas, monospace",
             fontSize: 12,
             borderRadius: 6,
-            border: '1px solid #e2e8f0'
+            border: `1px solid ${borderColor}`
           }}
         />
         {error && (
@@ -99,17 +107,17 @@ export default function SQLTerminal() {
             color: '#ef4444',
             marginBottom: 12,
             padding: '8px 12px',
-            background: '#fef2f2',
+            background: isDark ? '#2d0f0a' : '#fef2f2',
             borderRadius: 6,
             fontSize: 11,
             fontFamily: "'SF Mono', Monaco, Consolas, monospace",
-            border: '1px solid #fecaca'
+            border: `1px solid ${isDark ? '#7f1d1d' : '#fecaca'}`
           }}>
             ✖ {error}
           </div>
         )}
         {result && (
-          <div style={{ overflow: 'auto', background: '#fff', borderRadius: 6, border: '1px solid #e2e8f0' }}>
+          <div style={{ overflow: 'auto', background: resultBg, borderRadius: 6, border: `1px solid ${borderColor}` }}>
             <Table
               dataSource={result.rows}
               columns={result.columns.map(c => ({

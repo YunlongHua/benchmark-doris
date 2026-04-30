@@ -1,11 +1,10 @@
 # Doris Benchmark
 
-[中文文档](README.md) | English
+[中文](README.md) | English
 
 A desktop application for running database benchmarks (SSB, TPCH, TPCDS) against [Apache Doris](https://doris.apache.org) clusters and generating HTML performance reports.
 
 Built with Electron + React + TypeScript + Ant Design.
-
 
 ## Features
 
@@ -13,7 +12,7 @@ Built with Electron + React + TypeScript + Ant Design.
 - **One-click Benchmark** — Run all 5 steps (build, generate data, create tables, load data, run queries) automatically
 - **Step-by-step Execution** — Run individual benchmark steps and check environment status
 - **Real-time Logs** — View streaming remote script output in the built-in terminal
-- **HTML Reports** — Generate styled reports with charts (bar, line, volatility), performance scores, and query detail tables
+- **HTML Reports** — Generate styled reports with charts (duration, trend, speedup), performance scores, and query detail tables
 - **SSB Flat Table Support** — Tab-based report switching between regular and flat table results
 - **Theme & Language** — Light/Dark theme and Chinese/English language toggle
 
@@ -27,29 +26,91 @@ Built with Electron + React + TypeScript + Ant Design.
 
 Scale factors: 1, 10, 100, 500, 1000
 
+## Architecture Overview
+
+The system involves three components:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                 Execution Machine (Windows)                     │
+│                                                                 │
+│   ┌──────────────────────────────────────┐                      │
+│   │        Doris Benchmark.exe           │                      │
+│   │    (Electron + React Desktop App)    │                      │
+│   └────────────┬─────────────────────────┘                      │
+│                │   SSH (port 22)                                │
+│                │   Upload scripts · Issue commands · Stream logs│
+└────────────────┼────────────────────────────────────────────────┘
+                 │
+                 ▼
+┌────────────────┴────────────────────────────────────────────────┐
+│                Benchmark Machine (Linux)                        │
+│                                                                 │
+│   ┌──────────────────────────────────────┐                      │
+│   │        Benchmark Tool Suite          │                      │
+│   │   dbgen · DDL scripts · SQL queries  │                      │
+│   │   gcc/g++/make · MySQL client        │                      │
+│   └────────────┬─────────────────────────┘                      │
+│                │   MySQL (9030) + HTTP (8030/8040)              │
+│                │   Create tables · Load data · Run queries      │
+└────────────────┼────────────────────────────────────────────────┘
+                 │
+                 ▼
+┌────────────────┴────────────────────────────────────────────────┐
+│                  Doris Cluster (Linux)                          │
+│                                                                 │
+│   ┌──────────┐  ┌──────────┐  ┌──────────┐                     │
+│   │  FE Node  │  │  FE Node  │  │  FE Node  │   ···            │
+│   └──────────┘  └──────────┘  └──────────┘                     │
+│   ┌──────────┐  ┌──────────┐  ┌──────────┐                     │
+│   │  BE Node  │  │  BE Node  │  │  BE Node  │   ···            │
+│   └──────────┘  └──────────┘  └──────────┘                     │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Three roles explained:**
+
+| Role | OS | Description |
+|------|-----|-------------|
+| **Execution Machine** | Windows | The PC running `Doris Benchmark.exe`. Provides the UI and remotely controls the benchmark machine via SSH. |
+| **Benchmark Machine** | Linux | The server that actually executes the benchmark. Receives scripts and commands from the execution machine, performs compilation, data generation, data loading, and query execution locally. Must have network access to the Doris cluster. |
+| **Doris Cluster** | Linux | The Apache Doris database cluster under test, consisting of FE (Frontend) and BE (Backend) nodes. |
+
+> **Common deployment**: The benchmark machine can be co-located on a Doris node (for single-node testing) or deployed independently (for production cluster benchmarking). When the Doris cluster has multiple nodes, the benchmark machine is typically deployed on one of the FE nodes and accesses Doris services via `localhost`.
+
 ## Prerequisites
 
-### Local Machine
+### Execution Machine (Local Windows PC)
 
-- **Node.js** 18+
-- **npm** 9+
-- **Windows** (primary target; macOS/Linux untested but may work)
+- **OS**: Windows 10+ (primary target; macOS/Linux untested but may work)
+- No additional runtime required — `Doris Benchmark.exe` is a standalone packaged executable
 
-### Remote Server (where Doris runs)
+### Benchmark Machine (Remote Linux Server)
 
-- **Linux** with Bash
-- **SSH** server accessible by password authentication
-- **Doris** cluster with FE HTTP port (default: `8030`), HTTPS port (default: `8040`), and MySQL query port (default: `9030`) accessible from the remote server
-- **Build dependencies** for benchmark tools:
-  - `gcc`, `g++`, `make` (for compiling dbgen/tools)
-  - `unzip` (for extracting tool archives)
-  - `curl` (for interacting with Doris HTTP API)
-- **MySQL client** installed on the remote server (for loading data via streaming load)
+- **OS**: Linux with Bash
+- **SSH**: SSH server accessible by password authentication (port 22)
+- **Build tools**: `gcc`, `g++`, `make` (for compiling dbgen data generation tools)
+- **System tools**: `unzip` (for extracting tool archives), `curl` (for Doris HTTP API calls)
+- **MySQL client**: Required for loading data into Doris via Stream Load
 
-### Network
+### Doris Cluster
 
-- The **local machine** only needs to reach the remote server via **SSH** (port 22)
-- The **remote server** must be able to reach the Doris FE HTTP/MySQL ports on `localhost`
+- Apache Doris cluster deployed and running
+- FE ports accessible:
+  - **FE HTTP port** (default `8030`, actual port depends on cluster configuration, common default: 29980)
+  - **FE HTTPS port** (default `8040`, actual port depends on cluster configuration, common default: 29991)
+  - **FE MySQL query port** (default `9030`, actual port depends on cluster configuration, common default: 29982)
+
+### Network Connectivity
+
+```
+Execution Machine ──SSH(22)──▶ Benchmark Machine ──MySQL(9030)/HTTP(8030)──▶ Doris Cluster
+```
+
+- **Execution Machine → Benchmark Machine**: Only SSH (port 22) required
+- **Benchmark Machine → Doris Cluster**: Must reach FE HTTP/HTTPS ports and MySQL query port
+- If the benchmark machine is a Doris node, it accesses Doris via `localhost`
 
 ## Quick Start
 

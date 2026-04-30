@@ -45,13 +45,13 @@ if [[ -f "${CURDIR}/ssb-dbgen-linux.tar.gz" ]]; then
     echo "Using local ssb-dbgen-linux.tar.gz"
     tar -xzvf ssb-dbgen-linux.tar.gz -C "${CURDIR}"/
 else
-    wget https://palo-cloud-repo-bd.bd.bcebos.com/baidu-doris-release/ssb-dbgen-linux.tar.gz
+    wget -t 3 -T 30 https://palo-cloud-repo-bd.bd.bcebos.com/baidu-doris-release/ssb-dbgen-linux.tar.gz
     tar -xzvf ssb-dbgen-linux.tar.gz -C "${CURDIR}"/
 fi
 
-# compile ssb-dbgen
+# compile ssb-dbgen with 10-minute timeout
 cd "${SSB_DBGEN_DIR}/"
-make
+timeout 600 make 2>&1 || { echo "Build timed out or failed!"; exit 1; }
 cd -
 
 # check

@@ -37,13 +37,13 @@ TPCH_DBGEN_DIR="${CURDIR}/TPC-H_Tools_v3.0.0/dbgen"
 check_prerequest() {
     local CMD=$1
     local NAME=$2
-    if ! ${CMD}; then
+    if ! command -v ${CMD} >/dev/null 2>&1; then
         echo "${NAME} is missing. This script depends on unzip to extract files from TPC-H_Tools_v3.0.0new.zip"
         exit 1
     fi
 }
 
-check_prerequest "unzip -h" "unzip"
+check_prerequest "unzip" "unzip"
 
 # download tpch tools pacage first
 if [[ -d ${TPCH_DBGEN_DIR} ]]; then
@@ -53,15 +53,16 @@ fi
 
 if [[ -f "${CURDIR}/TPC-H_Tools_v3.0.0new.zip" ]]; then
     echo "Using local TPC-H_Tools_v3.0.0new.zip"
-    unzip "${CURDIR}/TPC-H_Tools_v3.0.0new.zip" -d "${CURDIR}/"
 else
-    wget "https://qa-build.oss-cn-beijing.aliyuncs.com/tools/TPC-H_Tools_v3.0.0new.zip" -O "${CURDIR}/TPC-H_Tools_v3.0.0new.zip"
-    unzip "${CURDIR}/TPC-H_Tools_v3.0.0new.zip" -d "${CURDIR}/"
+    wget -t 3 -T 30 "https://qa-build.oss-cn-beijing.aliyuncs.com/tools/TPC-H_Tools_v3.0.0new.zip" -O "${CURDIR}/TPC-H_Tools_v3.0.0new.zip"
 fi
+echo "Extracting dbgen source only (skipping ref_data)..."
+unzip -o "${CURDIR}/TPC-H_Tools_v3.0.0new.zip" "TPC-H_Tools_v3.0.0/dbgen/*" -d "${CURDIR}/"
 
-# modify tpcd.h
+# modify tpcd.h - append MYSQL definitions instead of overwriting
 cd "${TPCH_DBGEN_DIR}/"
-printf '%s' '
+if ! grep -q "MYSQL" tpcd.h 2>/dev/null; then
+    cat >>tpcd.h <<'EOF'
 #ifdef MYSQL
 #define GEN_QUERY_PLAN ""
 #define START_TRAN "START TRANSACTION"
@@ -70,17 +71,18 @@ printf '%s' '
 #define SET_ROWCOUNT "limit %d;\n"
 #define SET_DBASE "use %s;\n"
 #endif
-' >>tpcd.h
+EOF
+fi
 
 # modify makefile
 cp makefile.suite makefile
-sed -i 's/^CC      =/CC = gcc/g' makefile
-sed -i 's/^DATABASE=/DATABASE = MYSQL/g' makefile
-sed -i 's/^MACHINE =/MACHINE = LINUX/g' makefile
-sed -i 's/^WORKLOAD =/WORKLOAD = TPCH/g' makefile
+sed -i 's/^CC[[:space:]]*=.*/CC = gcc/' makefile
+sed -i 's/^DATABASE[[:space:]]*=.*/DATABASE = MYSQL/' makefile
+sed -i 's/^MACHINE[[:space:]]*=.*/MACHINE = LINUX/' makefile
+sed -i 's/^WORKLOAD[[:space:]]*=.*/WORKLOAD = TPCH/' makefile
 
-# compile tpch-dbgen
-make >/dev/null
+# compile tpch-dbgen with 10-minute timeout
+timeout 600 make 2>&1 || { echo "Build timed out or failed!"; exit 1; }
 cd -
 
 # check

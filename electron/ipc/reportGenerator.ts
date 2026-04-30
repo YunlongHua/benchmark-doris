@@ -227,13 +227,13 @@ export class ReportGenerator {
   	  <!-- Charts -->
 	  <div class="sec-title"><div class="line"></div><span data-i18n="charts">${isZh ? '性能图表' : 'Performance Charts'}</span></div>
 	  <div class="chart-tab-bar" id="chartTabBar">
-	    <button class="chart-tab-btn active" data-chart="bar" data-i18n="chartBar">${isZh ? '柱状图' : 'Bar'}</button>
-	    <button class="chart-tab-btn" data-chart="line" data-i18n="chartLine">${isZh ? '折线图' : 'Line'}</button>
-	    <button class="chart-tab-btn" data-chart="volatility" data-i18n="chartVol">${isZh ? '波动图' : 'Volatility'}</button>
+	    <button class="chart-tab-btn active" data-chart="bar" data-i18n="chartBar">${isZh ? '冷热耗时' : 'Duration'}</button>
+	    <button class="chart-tab-btn" data-chart="line" data-i18n="chartLine">${isZh ? '性能趋势' : 'Trend'}</button>
+	    <button class="chart-tab-btn" data-chart="volatility" data-i18n="chartVol">${isZh ? '缓存提升' : 'Speedup'}</button>
 	  </div>
-	  <div class="chart-panel active" id="chart-bar"><div class="chart-box"><canvas id="barChart"></canvas></div></div>
+	  <div class="charts-container"><div class="chart-panel active" id="chart-bar"><div class="chart-box"><canvas id="barChart"></canvas></div></div>
 	  <div class="chart-panel" id="chart-line"><div class="chart-box"><canvas id="lineChart"></canvas></div></div>
-	  <div class="chart-panel" id="chart-volatility"><div class="chart-box"><canvas id="volatilityChart"></canvas></div></div>
+	  <div class="chart-panel" id="chart-volatility"><div class="chart-box"><canvas id="volatilityChart"></canvas></div></div></div>
 
 <!-- Query Details -->
   <div class="sec-title"><div class="line"></div><span data-i18n="details">${isZh ? '查询明细' : 'Query Details'}</span></div>
@@ -310,13 +310,13 @@ export class ReportGenerator {
   	  <!-- Flat Charts -->
 	  <div class="sec-title"><div class="line" style="background: var(--accent2);"></div><span data-i18n="flatCharts">${isZh ? 'Flat 表性能图表' : 'Flat Table Charts'}</span></div>
 	  <div class="chart-tab-bar" id="flatChartTabBar">
-	    <button class="chart-tab-btn active" data-fchart="bar" data-i18n="chartBar">${isZh ? '柱状图' : 'Bar'}</button>
-	    <button class="chart-tab-btn" data-fchart="line" data-i18n="chartLine">${isZh ? '折线图' : 'Line'}</button>
-	    <button class="chart-tab-btn" data-fchart="volatility" data-i18n="chartVol">${isZh ? '波动图' : 'Volatility'}</button>
+	    <button class="chart-tab-btn active" data-fchart="bar" data-i18n="chartBar">${isZh ? '冷热耗时' : 'Duration'}</button>
+	    <button class="chart-tab-btn" data-fchart="line" data-i18n="chartLine">${isZh ? '性能趋势' : 'Trend'}</button>
+	    <button class="chart-tab-btn" data-fchart="volatility" data-i18n="chartVol">${isZh ? '缓存提升' : 'Speedup'}</button>
 	  </div>
-	  <div class="chart-panel active" id="fchart-bar"><div class="chart-box"><canvas id="flatBarChart"></canvas></div></div>
+	  <div class="charts-container"><div class="chart-panel active" id="fchart-bar"><div class="chart-box"><canvas id="flatBarChart"></canvas></div></div>
 	  <div class="chart-panel" id="fchart-line"><div class="chart-box"><canvas id="flatLineChart"></canvas></div></div>
-	  <div class="chart-panel" id="fchart-volatility"><div class="chart-box"><canvas id="flatVolatilityChart"></canvas></div></div>
+	  <div class="chart-panel" id="fchart-volatility"><div class="chart-box"><canvas id="flatVolatilityChart"></canvas></div></div></div>
 
 <!-- Flat Query Details -->
   <div class="sec-title"><div class="line" style="background: var(--accent2);"></div><span data-i18n="flatDetails">${isZh ? 'Flat 表查询明细' : 'Flat Table Details'}</span></div>
@@ -664,6 +664,7 @@ export class ReportGenerator {
   }
   .chart-tab-btn:hover { border-color: var(--border-strong); color: var(--text-secondary); }
   .chart-tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .charts-container { position: relative; min-height: 350px; margin-bottom: 24px; }
   .chart-panel { display: none; }
   .chart-panel.active { display: block; }
   .chart-box {
@@ -882,7 +883,7 @@ export class ReportGenerator {
       lineTitle:'冷热性能趋势',
       volTitle:'缓存性能提升 (%)',
       flatMetrics:'Flat 表关键指标', flatInfo:'Flat 表测试信息', flatCharts:'Flat 表性能图表', flatDetails:'Flat 表查询明细',
-      chartBar:'柱状图', chartLine:'折线图', chartVol:'波动图'
+      chartBar:'冷热耗时', chartLine:'性能趋势', chartVol:'缓存提升'
     },
     en: {
       metrics:'Key Metrics', queries:'OK / Total', successRate:'Success Rate', avgCold:'Avg Cold Run', avgHot:'Avg Hot Run',
@@ -896,7 +897,7 @@ export class ReportGenerator {
       lineTitle:'Cold vs Hot Trend',
       volTitle:'Cache Improvement (%)',
       flatMetrics:'Flat Table Key Metrics', flatInfo:'Flat Table Test Info', flatCharts:'Flat Table Charts', flatDetails:'Flat Table Details',
-      chartBar:'Bar', chartLine:'Line', chartVol:'Volatility'
+      chartBar:'Duration', chartLine:'Trend', chartVol:'Speedup'
     }
   };
 
@@ -981,6 +982,9 @@ export class ReportGenerator {
   Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(24,24,27,0.95)';
   Chart.defaults.plugins.tooltip.titleFont = { family: "'JetBrains Mono', monospace", size: 11 };
   Chart.defaults.plugins.tooltip.bodyFont = { family: "'JetBrains Mono', monospace", size: 10 };
+
+  // Temporarily show all chart panels so Chart.js can read proper canvas dimensions
+  document.querySelectorAll('.chart-panel').forEach(function(p) { p.classList.add('active'); });
 
   // Bar chart
   charts.barChart = new Chart(document.getElementById('barChart'), {
@@ -1108,7 +1112,10 @@ export class ReportGenerator {
         }
       }
     });
+    }
 
+    // Restore default panel visibility (only bar panels active)
+    document.querySelectorAll('#chart-line, #chart-volatility, #fchart-line, #fchart-volatility').forEach(function(p) { p.classList.remove('active'); });
     // Chart tab switching (regular)
     document.querySelectorAll('#chartTabBar .chart-tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1145,7 +1152,6 @@ export class ReportGenerator {
         }, 50);
       });
     });
-  }
 
   // Event binding
   document.querySelectorAll('#langGroup .pill').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));

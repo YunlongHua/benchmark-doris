@@ -43,3 +43,12 @@ body.lang-en {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
+
+/* Dark mode overrides for non-antd elements */
+body.dark {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+body.dark ::-webkit-scrollbar-thumb { background: #475569; }
+body.dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
