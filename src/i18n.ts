@@ -9,6 +9,11 @@ export const translations = {
     loadData: '加载数据',
     runQueries: '运行查询',
     uploadTools: '上传工具',
+    download: '下载',
+    clear: '清空',
+    format: '格式化',
+    log: '日志',
+    sql: 'SQL',
   },
   'en-US': {
     logPanel: 'Log Panel',
@@ -20,6 +25,11 @@ export const translations = {
     loadData: 'Load Data',
     runQueries: 'Run Queries',
     uploadTools: 'Upload Tools',
+    download: 'Download',
+    clear: 'Clear',
+    format: 'Format',
+    log: 'Log',
+    sql: 'SQL',
   }
 }
 

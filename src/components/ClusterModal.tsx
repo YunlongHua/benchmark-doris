@@ -71,7 +71,7 @@ export default function ClusterModal({ visible, editingCluster, onClose, onSelec
 
   const tips = {
     feHost: isZh
-      ? 'Doris FE 节点IP，可以通过登录Manager，单击"集群 > 服务 > Doris > 示例"，获取其中一个FE节点的IP或该节点的EIP。'
+      ? 'Doris FE 节点IP，可以通过登录Manager，单击"集群 > 服务 > Doris > 实例"，获取其中一个FE节点的IP或该节点的EIP。'
       : 'Doris FE node IP. Log in to Manager, click "Cluster > Services > Doris > Instances", and obtain the IP or EIP of one of the FE nodes.',
     feHttpPort: isZh
       ? 'Doris FE的HTTP端口，默认为29980，也可以通过登录Manager，单击"集群 > 服务 > Doris > 配置"，查询Doris服务的"http_port"参数获取。'

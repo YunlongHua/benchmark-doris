@@ -176,37 +176,45 @@ export default function App() {
                     onClick={() => setBottomPanel('log')}
                     style={{
                       width: 40,
-                      height: 40,
+                      height: 52,
                       borderRadius: 10,
                       display: 'flex',
+                      flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      gap: 2,
                       cursor: 'pointer',
                       background: bottomPanel === 'log' ? (isDark ? '#1e3a5f' : '#eff6ff') : 'transparent',
                       border: bottomPanel === 'log' ? (isDark ? '1px solid #1e40af' : '1px solid #bfdbfe') : '1px solid transparent',
                       transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                     }}
-                    title="Logs"
                   >
-                    <FileTextOutlined style={{ fontSize: 18, color: bottomPanel === 'log' ? '#3b82f6' : '#94a3b8' }} />
+                    <FileTextOutlined style={{ fontSize: 16, color: bottomPanel === 'log' ? '#3b82f6' : '#94a3b8' }} />
+                    <span style={{ fontSize: 9, color: bottomPanel === 'log' ? '#3b82f6' : '#94a3b8' }}>
+                      {language === 'zh-CN' ? '日志' : 'Log'}
+                    </span>
                   </div>
                   <div
                     onClick={() => setBottomPanel('sql')}
                     style={{
                       width: 40,
-                      height: 40,
+                      height: 52,
                       borderRadius: 10,
                       display: 'flex',
+                      flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      gap: 2,
                       cursor: 'pointer',
                       background: bottomPanel === 'sql' ? (isDark ? '#14532d' : '#f0fdf4') : 'transparent',
                       border: bottomPanel === 'sql' ? (isDark ? '1px solid #166534' : '1px solid #bbf7d0') : '1px solid transparent',
                       transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                     }}
-                    title="SQL Terminal"
                   >
-                    <ConsoleSqlOutlined style={{ fontSize: 18, color: bottomPanel === 'sql' ? '#22c55e' : '#94a3b8' }} />
+                    <ConsoleSqlOutlined style={{ fontSize: 16, color: bottomPanel === 'sql' ? '#22c55e' : '#94a3b8' }} />
+                    <span style={{ fontSize: 9, color: bottomPanel === 'sql' ? '#22c55e' : '#94a3b8' }}>
+                      {language === 'zh-CN' ? 'SQL' : 'SQL'}
+                    </span>
                   </div>
                 </div>
 

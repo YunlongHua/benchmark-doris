@@ -170,8 +170,8 @@ export class ReportGenerator {
       flatSectionHtml = `
   <!-- Flat Tab Panel -->
   <div class="tab-bar" id="tabBar">
-    <button class="tab-btn active" data-tab="regular">${isZh ? '普通表' : 'Regular'}</button>
-    <button class="tab-btn" data-tab="flat">${isZh ? 'Flat 表' : 'Flat Table'}</button>
+    <button class="tab-btn active" data-tab="regular" data-i18n="regularTab">${isZh ? '普通表' : 'Regular'}</button>
+    <button class="tab-btn" data-tab="flat" data-i18n="flatTab">${isZh ? 'Flat 表' : 'Flat Table'}</button>
   </div>
 
   <div class="tab-panel active" id="tab-regular">`
@@ -349,7 +349,7 @@ export class ReportGenerator {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${typeLabel} ${isZh ? '基准测试报告' : 'Benchmark Report'} — ${clusterName}</title>
+<title id="pageTitle" data-type="${typeLabel}" data-cluster="${clusterName}">${typeLabel} ${isZh ? '基准测试报告' : 'Benchmark Report'} — ${clusterName}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -883,7 +883,9 @@ export class ReportGenerator {
       lineTitle:'冷热性能趋势',
       volTitle:'缓存性能提升 (%)',
       flatMetrics:'Flat 表关键指标', flatInfo:'Flat 表测试信息', flatCharts:'Flat 表性能图表', flatDetails:'Flat 表查询明细',
-      chartBar:'冷热耗时', chartLine:'性能趋势', chartVol:'缓存提升'
+      chartBar:'冷热耗时', chartLine:'性能趋势', chartVol:'缓存提升',
+      regularTab:'普通表', flatTab:'Flat 表',
+      pageTitle:'基准测试报告'
     },
     en: {
       metrics:'Key Metrics', queries:'OK / Total', successRate:'Success Rate', avgCold:'Avg Cold Run', avgHot:'Avg Hot Run',
@@ -897,7 +899,9 @@ export class ReportGenerator {
       lineTitle:'Cold vs Hot Trend',
       volTitle:'Cache Improvement (%)',
       flatMetrics:'Flat Table Key Metrics', flatInfo:'Flat Table Test Info', flatCharts:'Flat Table Charts', flatDetails:'Flat Table Details',
-      chartBar:'Duration', chartLine:'Trend', chartVol:'Speedup'
+      chartBar:'Duration', chartLine:'Trend', chartVol:'Speedup',
+      regularTab:'Regular', flatTab:'Flat Table',
+      pageTitle:'Benchmark Report'
     }
   };
 
@@ -915,6 +919,9 @@ export class ReportGenerator {
     lang = l;
     document.querySelectorAll('#langGroup .pill').forEach(b => b.classList.toggle('on', b.dataset.lang === l));
     document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
+    // Update page title
+    const pageTitle = document.getElementById('pageTitle');
+    if (pageTitle) { pageTitle.textContent = pageTitle.dataset.type + ' ' + t('pageTitle') + ' — ' + pageTitle.dataset.cluster; }
     // Hero title & subtitle
     const heroTitle = document.querySelector('.hero-left h1 span');
     if (heroTitle) heroTitle.textContent = heroTitle.dataset[lang === 'zh' ? 'zh' : 'en'] || heroTitle.textContent;

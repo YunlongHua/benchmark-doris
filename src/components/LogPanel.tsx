@@ -110,8 +110,12 @@ export default function LogPanel() {
           >
             AUTO
           </Button>
-          <Button size="small" icon={<DownloadOutlined />} onClick={handleDownload} disabled={logs.length === 0} style={{ height: 22 }} title={language === 'zh-CN' ? '下载日志' : 'Download logs'} />
-          <Button size="small" icon={<ClearOutlined />} onClick={clearLogs} style={{ height: 22 }} />
+          <Button size="small" icon={<DownloadOutlined />} onClick={handleDownload} disabled={logs.length === 0} style={{ height: 22 }}>
+            {t('download')}
+          </Button>
+          <Button size="small" icon={<ClearOutlined />} onClick={clearLogs} style={{ height: 22 }}>
+            {t('clear')}
+          </Button>
         </Space>
       </div>
       <div style={{

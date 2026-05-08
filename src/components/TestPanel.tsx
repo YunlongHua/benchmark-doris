@@ -388,26 +388,34 @@ export default function TestPanel() {
         <div style={{ flex: 1 }} />
 
         {/* Language & Theme */}
-        <Select
-          value={language}
-          onChange={setLanguage}
-          options={[
-            { value: 'zh-CN', label: '中文' },
-            { value: 'en-US', label: 'EN' }
-          ]}
-          style={{ width: 68 }}
-          size="small"
-        />
-        <Select
-          value={theme}
-          onChange={setTheme}
-          options={[
-            { value: 'light', label: language === 'zh-CN' ? '☀ 亮色' : '☀ Light' },
-            { value: 'dark', label: language === 'zh-CN' ? '🌙 暗色' : '🌙 Dark' }
-          ]}
-          style={{ width: 90 }}
-          size="small"
-        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ fontSize: 11, color: '#94a3b8', marginRight: 4 }}>
+            {language === 'zh-CN' ? '语言' : 'Lang'}
+          </span>
+          <Select
+            value={language}
+            onChange={setLanguage}
+            options={[
+              { value: 'zh-CN', label: '中文' },
+              { value: 'en-US', label: 'EN' }
+            ]}
+            style={{ width: 80 }}
+            size="small"
+          />
+          <span style={{ fontSize: 11, color: '#94a3b8', marginRight: 4, marginLeft: 8 }}>
+            {language === 'zh-CN' ? '主题' : 'Theme'}
+          </span>
+          <Select
+            value={theme}
+            onChange={setTheme}
+            options={[
+              { value: 'light', label: language === 'zh-CN' ? '亮色' : 'Light' },
+              { value: 'dark', label: language === 'zh-CN' ? '暗色' : 'Dark' }
+            ]}
+            style={{ width: 80 }}
+            size="small"
+          />
+        </div>
       </div>
 
       {/* Divider */}

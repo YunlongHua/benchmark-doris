@@ -70,10 +70,12 @@ export default function SQLTerminal() {
           {result && <span style={{ color: '#94a3b8', fontSize: 11 }}>({result.rows.length} rows)</span>}
         </div>
         <Space size={4}>
-          <Tooltip title={language === 'zh-CN' ? '格式化' : 'Format'}>
-            <Button icon={<FormOutlined />} onClick={handleFormat} disabled={!sql.trim()} size="small" style={{ height: 22 }} />
-          </Tooltip>
-          <Button icon={<ClearOutlined />} onClick={handleClear} size="small" style={{ height: 22 }} />
+          <Button icon={<FormOutlined />} onClick={handleFormat} disabled={!sql.trim()} size="small" style={{ height: 22 }}>
+            {t('format')}
+          </Button>
+          <Button icon={<ClearOutlined />} onClick={handleClear} size="small" style={{ height: 22 }}>
+            {t('clear')}
+          </Button>
           <Button
             type="primary"
             icon={<PlayCircleOutlined />}
