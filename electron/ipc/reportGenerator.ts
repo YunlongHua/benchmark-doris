@@ -130,7 +130,7 @@ export class ReportGenerator {
         <td class="col-num">${hasData ? fmt(avgHot) : '—'}</td>
         <td class="col-num">${hasData ? fmt(stdDev) : '—'}</td>
         <td class="col-num col-speedup">${speedup ? speedup + 'x' : '—'}</td>
-        <td><span class="tag ${q.status === 'success' ? 'tag-ok' : 'tag-err'}">${q.status === 'success' ? (isZh ? '成功' : 'OK') : (isZh ? '失败' : 'FAIL')}</span></td>
+        <td><span class="tag ${q.status === 'success' ? 'tag-ok' : 'tag-err'}" data-i18n="${q.status === 'success' ? 'statusOk' : 'statusFail'}" data-orig="${q.status === 'success' ? (isZh ? '成功' : 'OK') : (isZh ? '失败' : 'FAIL')}">${q.status === 'success' ? (isZh ? '成功' : 'OK') : (isZh ? '失败' : 'FAIL')}</span></td>
       </tr>`
       }).join('')
     }
@@ -214,8 +214,6 @@ export class ReportGenerator {
   <!-- Test Info -->
   <div class="sec-title"><div class="line"></div><span data-i18n="info">${isZh ? '测试信息' : 'Test Information'}</span></div>
   <div class="info-grid">
-    <div class="info-item"><span class="lbl" data-i18n="testType">${isZh ? '测试类型' : 'Test Type'}</span><span class="val">${typeLabel}</span></div>
-    <div class="info-item"><span class="lbl" data-i18n="scale">${isZh ? '规模因子' : 'Scale Factor'}</span><span class="val">SF ${scale}</span></div>
     <div class="info-item"><span class="lbl" data-i18n="totalCold">${isZh ? '冷启动总耗时' : 'Total Cold Time'}</span><span class="val">${fmt(result.totalColdRunMs)}</span></div>
     <div class="info-item"><span class="lbl" data-i18n="totalHot">${isZh ? '热缓存总耗时' : 'Total Hot Time'}</span><span class="val">${fmt(result.totalHotRunMs)}</span></div>
     <div class="info-item"><span class="lbl" data-i18n="coldStd">${isZh ? '冷启动标准差' : 'Cold StdDev'}</span><span class="val">${summary.coldStdDev} ms</span></div>
@@ -297,8 +295,6 @@ export class ReportGenerator {
   <!-- Flat Test Info -->
   <div class="sec-title"><div class="line" style="background: var(--accent2);"></div><span data-i18n="flatInfo">${isZh ? 'Flat 表测试信息' : 'Flat Table Test Info'}</span></div>
   <div class="info-grid">
-    <div class="info-item"><span class="lbl" data-i18n="testType">${isZh ? '测试类型' : 'Test Type'}</span><span class="val">${typeLabel}</span></div>
-    <div class="info-item"><span class="lbl" data-i18n="scale">${isZh ? '规模因子' : 'Scale Factor'}</span><span class="val">SF ${scale}</span></div>
     <div class="info-item"><span class="lbl" data-i18n="totalCold">${isZh ? '冷启动总耗时' : 'Total Cold Time'}</span><span class="val">${fmt(flatTotalColdRunMs)}</span></div>
     <div class="info-item"><span class="lbl" data-i18n="totalHot">${isZh ? '热缓存总耗时' : 'Total Hot Time'}</span><span class="val">${fmt(flatTotalHotRunMs)}</span></div>
     <div class="info-item"><span class="lbl" data-i18n="coldStd">${isZh ? '冷启动标准差' : 'Cold StdDev'}</span><span class="val">${flatSummary.coldStdDev} ms</span></div>
@@ -845,7 +841,7 @@ export class ReportGenerator {
         <div class="hero-tag"><span class="dot"></span>${clusterName}</div>
         <div class="hero-tag">SF ${scale}</div>
         <div class="hero-tag">${typeLabel}</div>
-        <div class="hero-tag">${dateStr}</div>
+        <div class="hero-tag" data-date="${new Date().toISOString()}" data-lang="${displayLang}">${dateStr}</div>
       </div>
     </div>
   </div>
@@ -874,11 +870,12 @@ export class ReportGenerator {
     zh: {
       metrics:'关键指标', queries:'成功 / 总数', successRate:'成功率', avgCold:'平均冷启动', avgHot:'平均热缓存',
       qps:'每秒查询数', cacheRate:'缓存命中率',
-      info:'测试信息', testType:'测试类型', scale:'规模因子', totalCold:'冷启动总耗时', totalHot:'热缓存总耗时',
+      info:'测试信息', totalCold:'冷启动总耗时', totalHot:'热缓存总耗时',
       coldStd:'冷启动标准差', hotStd:'热缓存标准差', coldRange:'冷启动范围', hotRange:'热缓存范围',
       charts:'性能图表', details:'查询明细',
       colQuery:'查询', colCold:'冷启动', colHot1:'热启动1', colHot2:'热启动2', colBest:'最优热启动',
       colAvg:'平均', colStd:'偏差', colSpeedup:'加速比', colStatus:'状态',
+      statusOk:'成功', statusFail:'失败',
       barTitle:'查询执行耗时对比 (ms)',
       lineTitle:'冷热性能趋势',
       volTitle:'缓存性能提升 (%)',
@@ -890,11 +887,12 @@ export class ReportGenerator {
     en: {
       metrics:'Key Metrics', queries:'OK / Total', successRate:'Success Rate', avgCold:'Avg Cold Run', avgHot:'Avg Hot Run',
       qps:'Queries / sec', cacheRate:'Cache Hit Rate',
-      info:'Test Information', testType:'Test Type', scale:'Scale Factor', totalCold:'Total Cold Time', totalHot:'Total Hot Time',
+      info:'Test Information', totalCold:'Total Cold Time', totalHot:'Total Hot Time',
       coldStd:'Cold StdDev', hotStd:'Hot StdDev', coldRange:'Cold Range', hotRange:'Hot Range',
       charts:'Performance Charts', details:'Query Details',
       colQuery:'Query', colCold:'Cold', colHot1:'Hot 1', colHot2:'Hot 2', colBest:'Best Hot',
       colAvg:'Avg', colStd:'StdDev', colSpeedup:'Speedup', colStatus:'Status',
+      statusOk:'OK', statusFail:'FAIL',
       barTitle:'Query Execution Time (ms)',
       lineTitle:'Cold vs Hot Trend',
       volTitle:'Cache Improvement (%)',
@@ -919,6 +917,16 @@ export class ReportGenerator {
     lang = l;
     document.querySelectorAll('#langGroup .pill').forEach(b => b.classList.toggle('on', b.dataset.lang === l));
     document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
+    // Update date in hero tags
+    document.querySelectorAll('.hero-tag[data-date]').forEach(el => {
+      const isoDate = el.dataset.date;
+      if (isoDate) {
+        const d = new Date(isoDate);
+        el.textContent = d.toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US', {
+          year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+      }
+    });
     // Update page title
     const pageTitle = document.getElementById('pageTitle');
     if (pageTitle) { pageTitle.textContent = pageTitle.dataset.type + ' ' + t('pageTitle') + ' — ' + pageTitle.dataset.cluster; }
