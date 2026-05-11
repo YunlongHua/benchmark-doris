@@ -57,7 +57,7 @@ else
     wget -t 3 -T 30 "https://qa-build.oss-cn-beijing.aliyuncs.com/tools/TPC-DS_Tools_v3.2.0rc2.zip" -O "${CURDIR}/TPC-DS_Tools_v3.2.0rc2.zip"
 fi
 echo "Extracting tools source only (skipping ref_data)..."
-unzip -o "${CURDIR}/TPC-DS_Tools_v3.2.0rc2.zip" "TPC-DS_Tools_v3.2.0rc2/tools/*" -d "${CURDIR}/"
+unzip -o "${CURDIR}/TPC-DS_Tools_v3.2.0rc2.zip" "DSGen-software-code-3.2.0rc2/tools/*" -d "${CURDIR}/"
 
 # compile tpcds-dsdgen with 10-minute timeout
 cd "${TPCDS_DBGEN_DIR}/"
